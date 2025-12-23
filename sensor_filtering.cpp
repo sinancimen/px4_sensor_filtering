@@ -113,9 +113,7 @@ SensorFiltering::SensorFiltering(int example_param, bool example_flag)
 
 void SensorFiltering::run()
 {
-	// Example: run the loop synchronized to the sensor_combined topic publication
 	double stepSize(0.00125); // 800 Hz
-
 	// initialize parameters
 	parameters_update(true);
 
