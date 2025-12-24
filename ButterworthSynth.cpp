@@ -60,9 +60,9 @@ IIR_Coeffs butter_synth(int N, double fc, double fs)
 	}
 
 	// II. Scale poles in frequency
-	double Fc = fs / pi * tan(pi * fc / fs);
+	double Fc = fs / M_PI * tan(M_PI * fc / fs);
 	for (size_t i=0; i<pa.size(); i++)
-		pa[i] *= 2 * pi * Fc;
+		pa[i] *= 2 * M_PI * Fc;
 
 	// III. Find coeffs of digital filter poles and zeros in the z plane
 	for (size_t i = 0; i < N; i++)
