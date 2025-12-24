@@ -14,19 +14,25 @@ void GyroFiltering::Publish()
 
 int GyroFiltering::task_spawn(int argc, char *argv[])
 {
-	_task_id = px4_task_spawn_cmd("gyro_filtering",
-				      SCHED_DEFAULT,
-				      SCHED_PRIORITY_DEFAULT,
-				      1024,
-				      (px4_main_t)&run_trampoline,
-				      (char *const *)argv);
+	GyroFiltering *instance = new GyroFiltering();
 
-	if (_task_id < 0) {
-		_task_id = -1;
-		return -errno;
+	if (instance) {
+		_object.store(instance);
+		_task_id = task_id_is_work_queue;
+
+		if (instance->init()) {
+			return PX4_OK;
+		}
+
+	} else {
+		PX4_ERR("alloc failed");
 	}
 
-	return 0;
+	delete instance;
+	_object.store(nullptr);
+	_task_id = -1;
+
+	return PX4_ERROR;
 }
 int GyroFiltering::print_status()
 {
@@ -43,49 +49,25 @@ int gyro_filtering_main(int argc, char *argv[])
 	return GyroFiltering::main(argc, argv);
 }
 
-GyroFiltering *GyroFiltering::instantiate(int argc, char *argv[])
+bool GyroFiltering::init()
 {
-	int example_param = 0;
-	bool example_flag = false;
-	bool error_flag = false;
+	parameters_update(true);
 
-	int myoptind = 1;
-	int ch;
-	const char *myoptarg = nullptr;
+	IIR_Coeffs gyro_coeffs = butter_synth(_param_sfilt_gyro_n.get(), _param_sfilt_gyro_freq.get(), 1.0/_step_size);
+	IIR_Coeffs angacc_coeffs = butter_synth(_param_sfilt_aacc_n.get(), _param_sfilt_aacc_freq.get(), 1.0/_step_size);
 
-	// parse CLI arguments
-	while ((ch = px4_getopt(argc, argv, "p:f", &myoptind, &myoptarg)) != EOF) {
-		switch (ch) {
-		case 'p':
-			example_param = (int)strtol(myoptarg, nullptr, 10);
-			break;
-
-		case 'f':
-			example_flag = true;
-			break;
-
-		case '?':
-			error_flag = true;
-			break;
-
-		default:
-			PX4_WARN("unrecognized flag");
-			error_flag = true;
-			break;
-		}
+	for (int i = 0; i < 3; ++i) {
+		_gyro_filters[i]  = ButterworthIIR(gyro_coeffs);
+		_angacc_filters[i] = ButterworthIIR(angacc_coeffs);
 	}
 
-	if (error_flag) {
-		return nullptr;
+	// execute Run() on every vehicle_angular_velocity publication
+	if (!_vehicle_angular_velocity_sub.registerCallback()) {
+		PX4_ERR("callback registration failed");
+		return false;
 	}
 
-	GyroFiltering *instance = new GyroFiltering(example_param, example_flag);
-
-	if (instance == nullptr) {
-		PX4_ERR("alloc failed");
-	}
-
-	return instance;
+	return true;
 }
 
 void GyroFiltering::parameters_update(bool force)
@@ -101,33 +83,33 @@ void GyroFiltering::parameters_update(bool force)
 	}
 }
 
-GyroFiltering::GyroFiltering(int example_param, bool example_flag)
+GyroFiltering::GyroFiltering()
 	: ModuleParams(nullptr)
 {
 }
 
-void GyroFiltering::run()
+void GyroFiltering::Run()
 {
-	double stepSize(0.0025); // 400 Hz
-	parameters_update(true);
-
-	IIR_Coeffs gyro_coeffs = butter_synth(_param_sfilt_gyro_n.get(), _param_sfilt_gyro_freq.get(), 1.0/stepSize);
-	IIR_Coeffs angacc_coeffs = butter_synth(_param_sfilt_aacc_n.get(), _param_sfilt_aacc_freq.get(), 1.0/stepSize);
-
-	for (int i = 0; i < 3; ++i) {
-		_gyro_filters[i]  = ButterworthIIR(gyro_coeffs);
-		_angacc_filters[i] = ButterworthIIR(angacc_coeffs);
+	if (should_exit()) {
+		ScheduleClear();
+		exit_and_cleanup();
+		return;
 	}
 
-    while (!should_exit()) {
+	// Check if parameters have changed
+	if (_parameter_update_sub.updated()) {
+		// clear update
+		parameter_update_s param_update;
+		_parameter_update_sub.copy(&param_update);
+		updateParams(); // update module parameters (in DEFINE_PARAMETERS)
+	}
+
+    if (_vehicle_angular_velocity_sub.updated()) {
         double currentTime(getHiResTime());
         
         PollTopics();
-        Step(stepSize);
+        Step();
         Publish();
-
-        double timeToBeWaited=stepSize-(getHiResTime()-currentTime)-0.001; // no idea why the 0.001 offset is necessary
-        if (timeToBeWaited>0) system_usleep(uint32_t(timeToBeWaited*1e6));
     }
 }
 
@@ -138,7 +120,7 @@ void GyroFiltering::PollTopics()
     }
 }
 
-void GyroFiltering::Step(double stepSize)
+void GyroFiltering::Step()
 {
     for (int i=0; i<3; i++) {
         _angrate_radps[i] = _gyro_filters[i].process(_vehicle_angular_velocity.xyz[i]);
@@ -154,7 +136,7 @@ void GyroFiltering::Step(double stepSize)
     }
 
     for (int i=0; i<3; i++) {
-		double angacc = (_angrate_radps[i] - _prev_angrate_radps[i]) / stepSize;
+		double angacc = (_angrate_radps[i] - _prev_angrate_radps[i]) / _step_size;
         _angacc_radps2[i] = _angacc_filters[i].process(angacc);
         _prev_angrate_radps[i] = _angrate_radps[i];
     }

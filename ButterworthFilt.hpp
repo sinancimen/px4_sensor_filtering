@@ -1,7 +1,7 @@
 #pragma once
 #include "ButterworthSynth.h"
 #include <vector>
-#include <stdexcept>
+//#include <stdexcept>
 #include <algorithm>
 
 class ButterworthIIR {
@@ -13,10 +13,10 @@ public:
     }
 
     void setCoeffs(const IIR_Coeffs& c) {
-        if (c.a.empty() || c.b.empty() || c.a.size() != c.b.size())
-            throw std::invalid_argument("a and b must be non-empty and same length");
-        if (std::abs(c.a[0] - 1.0) > 1e-9)
-            throw std::invalid_argument("Expected a[0] == 1.0");
+        //if (c.a.empty() || c.b.empty() || c.a.size() != c.b.size())
+        //    throw std::invalid_argument("a and b must be non-empty and same length");
+        //if (std::abs(c.a[0] - 1.0) > 1e-9)
+        //    throw std::invalid_argument("Expected a[0] == 1.0");
 
         a_ = c.a;
         b_ = c.b;

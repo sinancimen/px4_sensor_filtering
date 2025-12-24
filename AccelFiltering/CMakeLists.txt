@@ -5,4 +5,7 @@ px4_add_module(
 	MAIN accel_filtering
 	SRCS
 		accel_filtering.cpp
+		accel_filtering.hpp
+	DEPENDS
+		px4_work_queue
 	)

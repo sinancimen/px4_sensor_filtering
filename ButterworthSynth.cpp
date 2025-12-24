@@ -3,7 +3,7 @@
 #include <complex>
 #include <cmath>
 #include <numeric>
-#include <assert.h>
+//#include <assert.h>
 
 using namespace std::literals::complex_literals;
 
@@ -49,7 +49,7 @@ IIR_Coeffs butter_synth(int N, double fc, double fs)
 	std::vector<std::complex<double>> pa(N);
 	std::vector<std::complex<double>> p(N);
 	std::vector<std::complex<double>> q(N, -1.0);
-	assert(fc < fs / 2); // Cutoff frequency must be less that fs/2
+	//assert(fc < fs / 2); // Cutoff frequency must be less that fs/2
 
 	// I. Find poles of analog filter
 	for (int i = 0; i < N; i++)

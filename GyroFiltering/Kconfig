@@ -1,0 +1,5 @@
+menuconfig MODULES_GYRO_FILTERING
+	bool "gyro_filtering"
+	default n
+	---help---
+		Enable support for gyro_filtering

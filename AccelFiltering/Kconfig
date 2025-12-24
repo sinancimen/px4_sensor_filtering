@@ -1,0 +1,5 @@
+menuconfig MODULES_ACCEL_FILTERING
+	bool "accel_filtering"
+	default n
+	---help---
+		Enable support for accel_filtering
