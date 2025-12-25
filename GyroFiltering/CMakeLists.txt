@@ -5,4 +5,10 @@ px4_add_module(
 	MAIN gyro_filtering
 	SRCS
 		gyro_filtering.cpp
+		gyro_filtering.hpp
+		ButterworthFilt.hpp
+		ButterworthSynth.cpp
+		ButterworthSynth.hpp
+	DEPENDS
+		px4_work_queue
 	)

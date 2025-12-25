@@ -1,3 +1,5 @@
+// Written by Sinan Cimen, 2025. https://github.com/sinancimen
+
 #pragma once
 #include "ButterworthSynth.hpp"
 

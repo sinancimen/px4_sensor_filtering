@@ -49,8 +49,8 @@ bool AccelFiltering::init()
 {
 	parameters_update(true);
 
-	IIR_Coeffs accel_coeffs = butter_synth(_param_sfilt_accel_n.get(), _param_sfilt_accel_freq.get(), 1.0/_step_size);
-	IIR_Coeffs jerk_coeffs = butter_synth(_param_sfilt_jrk_n.get(), _param_sfilt_jrk_freq.get(), 1.0/_step_size);
+	IIR_Coeffs accel_coeffs = butter_synth(_param_sfilt_accel_n.get(), _param_sfilt_accel_freq.get()/2.0/M_PI, 1.0/_step_size);
+	IIR_Coeffs jerk_coeffs = butter_synth(_param_sfilt_jrk_n.get(), _param_sfilt_jrk_freq.get()/2.0/M_PI, 1.0/_step_size);
 
 	for (int i = 0; i < 3; ++i) {
 		_accel_filters[i] = ButterworthIIR(accel_coeffs);

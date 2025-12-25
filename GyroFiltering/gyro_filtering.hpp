@@ -2,8 +2,12 @@
 
 #pragma once
 
+#include <px4_platform_common/defines.h>
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/module_params.h>
+#include <px4_platform_common/posix.h>
+#include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
+
 #include <uORB/SubscriptionInterval.hpp>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/gyro_filtered_data.h>
@@ -12,11 +16,9 @@
 #include <uORB/SubscriptionCallback.hpp>
 #include <uORB/PublicationMulti.hpp>
 #include <uORB/topics/vehicle_angular_velocity.h>
-#include "../ButterworthFilt.hpp"
+#include "ButterworthFilt.hpp"
 
 using namespace time_literals;
-
-extern "C" __EXPORT int gyro_filtering_main(int argc, char *argv[]);
 
 class GyroFiltering : public ModuleBase<GyroFiltering>, public ModuleParams, public px4::ScheduledWorkItem
 {
@@ -27,9 +29,6 @@ public:
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
-
-	/** @see ModuleBase */
-	static GyroFiltering *instantiate(int argc, char *argv[]);
 
 	/** @see ModuleBase */
 	static int custom_command(int argc, char *argv[]);
@@ -80,5 +79,5 @@ private:
 
     uORB::Publication<gyro_filtered_data_s> _gyro_filtered_data_pub{ORB_ID(gyro_filtered_data)};
     gyro_filtered_data_s _gyro_filtered_data{};
-	uORB::Subscription _vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
+	uORB::SubscriptionCallbackWorkItem _vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
 };

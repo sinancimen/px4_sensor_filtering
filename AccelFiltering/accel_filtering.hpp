@@ -31,9 +31,6 @@ public:
 	static int task_spawn(int argc, char *argv[]);
 
 	/** @see ModuleBase */
-	static AccelFiltering *instantiate(int argc, char *argv[]);
-
-	/** @see ModuleBase */
 	static int print_usage(const char *reason = nullptr);
 
 	/** @see ModuleBase::print_status() */

@@ -40,10 +40,6 @@ int GyroFiltering::print_status()
 	return 0;
 }
 
-GyroFiltering::~GyroFiltering()
-{
-}
-
 int gyro_filtering_main(int argc, char *argv[])
 {
 	return GyroFiltering::main(argc, argv);
@@ -53,8 +49,8 @@ bool GyroFiltering::init()
 {
 	parameters_update(true);
 
-	IIR_Coeffs gyro_coeffs = butter_synth(_param_sfilt_gyro_n.get(), _param_sfilt_gyro_freq.get(), 1.0/_step_size);
-	IIR_Coeffs angacc_coeffs = butter_synth(_param_sfilt_aacc_n.get(), _param_sfilt_aacc_freq.get(), 1.0/_step_size);
+	IIR_Coeffs gyro_coeffs = butter_synth(_param_sfilt_gyro_n.get(), _param_sfilt_gyro_freq.get()/2.0/M_PI, 1.0/_step_size);
+	IIR_Coeffs angacc_coeffs = butter_synth(_param_sfilt_aacc_n.get(), _param_sfilt_aacc_freq.get()/2.0/M_PI, 1.0/_step_size);
 
 	for (int i = 0; i < 3; ++i) {
 		_gyro_filters[i]  = ButterworthIIR(gyro_coeffs);
@@ -105,8 +101,6 @@ void GyroFiltering::Run()
 	}
 
     if (_vehicle_angular_velocity_sub.updated()) {
-        double currentTime(getHiResTime());
-        
         PollTopics();
         Step();
         Publish();
@@ -140,4 +134,34 @@ void GyroFiltering::Step()
         _angacc_radps2[i] = _angacc_filters[i].process(angacc);
         _prev_angrate_radps[i] = _angrate_radps[i];
     }
+}
+
+int GyroFiltering::custom_command(int argc, char *argv[])
+{
+	return print_usage("unknown command");
+}
+
+int GyroFiltering::print_usage(const char *reason)
+{
+	if (reason) {
+		PX4_WARN("%s\n", reason);
+	}
+
+	PRINT_MODULE_DESCRIPTION(
+		R"DESCR_STR(
+### Description
+Example of a simple module running out of a work queue.
+
+)DESCR_STR");
+
+	PRINT_MODULE_USAGE_NAME("gyro_filtering", "modules");
+	PRINT_MODULE_USAGE_COMMAND("start");
+	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
+
+	return 0;
+}
+
+extern "C" __EXPORT int gyro_filtering_main(int argc, char *argv[])
+{
+	return GyroFiltering::main(argc, argv);
 }
