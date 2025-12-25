@@ -1,13 +1,13 @@
 // Written by Sinan Cimen, 2025. https://github.com/sinancimen
 
-#include "accel_filtering.h"
+#include "accel_filtering.hpp"
 #include <cstring>
 
 
 void AccelFiltering::Publish()
 {
 	std::memcpy(_accel_filtered_data.accel_mps2, _accel_mps2, sizeof(_accel_mps2));
-    std::memcpy(_accel_filtered_data.jerk_mps3, _jerk_mps3, sizeof(_jerk_mps3));
+    	std::memcpy(_accel_filtered_data.jerk_mps3, _jerk_mps3, sizeof(_jerk_mps3));
 	_accel_filtered_data.timestamp = hrt_absolute_time();
 	_accel_filtered_data_pub.publish(_accel_filtered_data);
 }
@@ -40,11 +40,7 @@ int AccelFiltering::print_status()
 	return 0;
 }
 
-AccelFiltering::~AccelFiltering()
-{
-}
-
-int accel_filtering_main(int argc, char *argv[])
+extern "C" __EXPORT int accel_filtering_main(int argc, char *argv[])
 {
 	return AccelFiltering::main(argc, argv);
 }
@@ -84,7 +80,7 @@ void AccelFiltering::parameters_update(bool force)
 }
 
 AccelFiltering::AccelFiltering()
-	: ModuleParams(nullptr)
+	: ModuleParams(nullptr), ScheduledWorkItem("accel_filtering", px4::wq_configurations::lp_default)
 {
 }
 
@@ -105,8 +101,6 @@ void AccelFiltering::Run()
 	}
 
     if (_vehicle_acceleration_sub.updated()) {
-        double currentTime(getHiResTime());
-        
         PollTopics();
         Step();
         Publish();
@@ -140,4 +134,29 @@ void AccelFiltering::Step()
         _jerk_mps3[i] = _jerk_filters[i].process(jerk);
         _prev_accel_mps2[i] = _accel_mps2[i];
     }
+}
+
+int AccelFiltering::custom_command(int argc, char *argv[])
+{
+	return print_usage("unknown command");
+}
+
+int AccelFiltering::print_usage(const char *reason)
+{
+	if (reason) {
+		PX4_WARN("%s\n", reason);
+	}
+
+	PRINT_MODULE_DESCRIPTION(
+		R"DESCR_STR(
+### Description
+Example of a simple module running out of a work queue.
+
+)DESCR_STR");
+
+	PRINT_MODULE_USAGE_NAME("accel_filtering", "modules");
+	PRINT_MODULE_USAGE_COMMAND("start");
+	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
+
+	return 0;
 }

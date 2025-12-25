@@ -16,11 +16,9 @@
 #include <uORB/SubscriptionCallback.hpp>
 #include <uORB/PublicationMulti.hpp>
 #include <uORB/topics/vehicle_acceleration.h>
-#include "../ButterworthFilt.hpp"
+#include "ButterworthFilt.hpp"
 
 using namespace time_literals;
-
-extern "C" __EXPORT int accel_filtering_main(int argc, char *argv[]);
 
 class AccelFiltering : public ModuleBase<AccelFiltering>, public ModuleParams, public px4::ScheduledWorkItem
 {
@@ -42,6 +40,9 @@ public:
 	int print_status() override;
 
 	bool init();
+
+	/** @see ModuleBase */
+	static int custom_command(int argc, char *argv[]);
 
 private:
 
@@ -81,5 +82,5 @@ private:
 
     uORB::Publication<accel_filtered_data_s> _accel_filtered_data_pub{ORB_ID(accel_filtered_data)};
     accel_filtered_data_s _accel_filtered_data{};
-    uORB::Subscription _vehicle_acceleration_sub{ORB_ID(vehicle_acceleration)};
+    uORB::SubscriptionCallbackWorkItem _vehicle_acceleration_sub{this, ORB_ID(vehicle_acceleration)};
 };
