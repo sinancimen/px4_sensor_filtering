@@ -3,11 +3,11 @@
 #pragma once
 #include "ButterworthSynth.hpp"
 
-class ButterworthIIR {
+class ButterworthIIR { // Implements a direct-form IIR filter
 public:
     ButterworthIIR() = default;
 
-    explicit ButterworthIIR(const IIR_Coeffs& c) {
+    explicit ButterworthIIR(const IIR_Coeffs& c) { // Initialize with given coefficients
         setCoeffs(c);
     }
 
@@ -15,14 +15,14 @@ public:
         assert(c.order >= 1 && c.order <= BUTTERWORTH_MAX_ORDER);
         order_ = static_cast<std::size_t>(c.order);
 
-        for (std::size_t i = 0; i <= order_; ++i) {
+        for (std::size_t i = 0; i <= order_; ++i) {  // copy coefficients
             a_[i] = c.a[i];
             b_[i] = c.b[i];
             xHist_[i] = 0.0;
             yHist_[i] = 0.0;
         }
 
-        for (std::size_t i = order_ + 1; i < BUTTERWORTH_MAX_COEFFS; ++i) {
+        for (std::size_t i = order_ + 1; i < BUTTERWORTH_MAX_COEFFS; ++i) { // zero unused coefficients and history
             a_[i] = 0.0;
             b_[i] = 0.0;
             xHist_[i] = 0.0;
@@ -30,7 +30,7 @@ public:
         }
     }
 
-    void reset(double value = 0.0) {
+    void reset(double value = 0.0) { // Reset history to specified value
         if (order_ == 0) return;
         for (std::size_t i = 0; i <= order_; ++i) {
             xHist_[i] = value;
@@ -66,9 +66,9 @@ public:
     }
 
 private:
-    double a_[BUTTERWORTH_MAX_COEFFS] = {};
+    double a_[BUTTERWORTH_MAX_COEFFS] = {}; 
     double b_[BUTTERWORTH_MAX_COEFFS] = {};
-    double xHist_[BUTTERWORTH_MAX_COEFFS] = {};
-    double yHist_[BUTTERWORTH_MAX_COEFFS] = {};
-    std::size_t order_ = 0;
+    double xHist_[BUTTERWORTH_MAX_COEFFS] = {}; // history for feedforward (input)
+    double yHist_[BUTTERWORTH_MAX_COEFFS] = {}; // history for feedback (output)
+    std::size_t order_ = 0; // Filter order between 1 and BUTTERWORTH_MAX_ORDER
 };
