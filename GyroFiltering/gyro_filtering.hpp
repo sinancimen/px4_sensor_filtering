@@ -79,5 +79,5 @@ private:
 
     uORB::Publication<gyro_filtered_data_s> _gyro_filtered_data_pub{ORB_ID(gyro_filtered_data)};
     gyro_filtered_data_s _gyro_filtered_data{};
-	uORB::SubscriptionCallbackWorkItem _vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
+	uORB::SubscriptionCallbackWorkItem _vehicle_angular_velocity_sub{this, ORB_ID(vehicle_angular_velocity)};
 };

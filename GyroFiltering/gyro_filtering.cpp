@@ -1,6 +1,6 @@
 // Written by Sinan Cimen, 2025. https://github.com/sinancimen
 
-#include "gyro_filtering.h"
+#include "gyro_filtering.hpp"
 #include <cstring>
 
 
@@ -40,11 +40,6 @@ int GyroFiltering::print_status()
 	return 0;
 }
 
-int gyro_filtering_main(int argc, char *argv[])
-{
-	return GyroFiltering::main(argc, argv);
-}
-
 bool GyroFiltering::init()
 {
 	parameters_update(true);
@@ -80,7 +75,7 @@ void GyroFiltering::parameters_update(bool force)
 }
 
 GyroFiltering::GyroFiltering()
-	: ModuleParams(nullptr)
+	: ModuleParams(nullptr), ScheduledWorkItem("gyro_filtering", px4::wq_configurations::lp_default)
 {
 }
 
